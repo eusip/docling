@@ -1436,6 +1436,9 @@ class LayoutObjectDetectionOptions(
 LayoutObjectDetectionOptions.register_preset(
     stage_model_specs.OBJECT_DETECTION_LAYOUT_HERON
 )
+LayoutObjectDetectionOptions.register_preset(
+    stage_model_specs.OBJECT_DETECTION_LAYOUT_HERON_MLX
+)
 
 
 class AsrPipelineOptions(PipelineOptions):
