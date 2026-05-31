@@ -91,6 +91,7 @@ from docling.datamodel.document import ConversionResult, DoclingVersion
 from docling.datamodel.pipeline_options import (
     AsrPipelineOptions,
     ConvertPipelineOptions,
+    LayoutObjectDetectionOptions,
     OcrAutoOptions,
     OcrOptions,
     PdfBackend,
@@ -141,6 +142,9 @@ ocr_engines_enum_internal = ocr_factory_internal.get_enum()
 
 # Get available VLM presets from the registry
 vlm_preset_ids = VlmConvertOptions.list_preset_ids()
+
+# Get available layout presets from the registry
+layout_preset_ids = LayoutObjectDetectionOptions.list_preset_ids()
 
 DOCLING_ASCII_ART = r"""
                              ████ ██████
@@ -466,6 +470,13 @@ def convert(  # noqa: C901
             help=f"Choose the VLM preset to use with PDF or image files. Available presets: {', '.join(vlm_preset_ids)}",
         ),
     ] = "granite_docling",
+    layout_preset: Annotated[
+        str | None,
+        typer.Option(
+            ...,
+            help=f"Choose the layout detection preset for PDF processing. Available presets: {', '.join(layout_preset_ids)}",
+        ),
+    ] = None,
     asr_model: Annotated[
         AsrModelType,
         typer.Option(..., help="Choose the ASR model to use with audio/video files."),
@@ -801,6 +812,19 @@ def convert(  # noqa: C901
                 do_chart_extraction=enrich_chart_extraction,
                 document_timeout=document_timeout,
             )
+            if layout_preset is not None:
+                try:
+                    pipeline_options.layout_options = (
+                        LayoutObjectDetectionOptions.from_preset(layout_preset)
+                    )
+                except KeyError:
+                    err_console.print(
+                        f"[red]Error: Layout preset '{layout_preset}' not found.[/red]"
+                    )
+                    err_console.print(
+                        f"[yellow]Available presets: {', '.join(layout_preset_ids)}[/yellow]"
+                    )
+                    raise typer.Abort()
             if isinstance(
                 pipeline_options.table_structure_options, TableStructureOptions
             ):
